@@ -1,10 +1,17 @@
-import json
-import os
+import requests
 
 def load_token_from_client() -> dict:
-    token_path = os.path.join("..", "client", "token_store.json")
-    if not os.path.exists(token_path):
-        raise FileNotFoundError("token_store.json not found.")
-    
-    with open(token_path, "r") as f:
-        return json.load(f)
+    FASTAPI_TOKEN_URL = "https://zoho-mcp-fastapi.onrender.com/token"
+
+    try:
+        res = requests.get(FASTAPI_TOKEN_URL)
+        res.raise_for_status()
+        token_data = res.json()
+
+        if "error" in token_data:
+            raise Exception("Token fetch error: No valid token found.")
+
+        return token_data
+
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Error fetching token from FastAPI server: {str(e)}")

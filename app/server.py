@@ -4,7 +4,7 @@ import requests
 from typing import Dict
 from utils.pinecone_client import pinecone_index
 from utils.genai_client import embed_query
-from prompts.descriptors import TOOL_DESCRIPTOR, FORMAT_INSTRUCTIONS
+
 from utils.token_loader import load_token_from_client
 import requests
 
