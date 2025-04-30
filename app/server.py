@@ -76,7 +76,13 @@ def fetch_zoho_results(url: str) -> dict:
     except Exception as e:
         import traceback
         print("Tool crashed:", traceback.format_exc())
-        return {"error": "Tool failed internally", "details": str(e)}
+        return {
+        "results": {
+            "error": "Tool failed internally",
+            "details": str(e),
+            "trace": traceback.format_exc()
+        }
+    }
 
 if __name__ == "__main__":
     mcp.run(transport="sse")
