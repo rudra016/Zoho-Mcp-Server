@@ -1,10 +1,10 @@
 import requests
-from typing import List, Dict
+from typing import List
 from .token_loader import load_token_from_client
 
 def get_searchable_fields(module: str) -> List[str]:
     """
-    Fetch searchable field names for a given module from Zoho CRM.
+    Fetch field labels that are both searchable and visible from Zoho CRM for a given module.
     """
     token_data = load_token_from_client()
     access_token = token_data["access_token"]
@@ -24,6 +24,7 @@ def get_searchable_fields(module: str) -> List[str]:
     searchable_field_labels = [
         field["field_label"]
         for field in fields_data
-        if field.get("searchable", False) and "field_label" in field
+        if field.get("searchable") and field.get("visible") and "field_label" in field
     ]
+
     return searchable_field_labels
