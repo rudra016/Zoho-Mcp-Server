@@ -4,29 +4,44 @@ import requests
 from typing import Dict
 from utils.pinecone_client import pinecone_index
 from utils.genai_client import embed_query
-
+from utils.fields_fetcher import get_searchable_fields
 from utils.token_loader import load_token_from_client
 import requests
 
 mcp = FastMCP("zoho_crm")
 
-   
+ 
 @mcp.tool()
 def get_filter_descriptors(question: str, module: str = "Deals", complexity: str = "simple") -> Dict:
     """
     This tool performs a Pinecone vector search based on the question and module,
     and returns matching content, tool descriptors, and formatting instructions.
+    Ensures only searchable fields are retrieved from Pinecone.
     """
     try:
         print(f"Tool received question: {question}")
+        searchable_fields = get_searchable_fields(module)
+        print(f"Searchable fields for {module}: {searchable_fields}")
+
+        if not searchable_fields:
+            return {
+                "pinecone_results": [],
+                "descriptors": TOOL_DESCRIPTOR,
+                "format_instructions": FORMAT_INSTRUCTIONS,
+                "warning": f"No searchable fields found for module '{module}'"
+            }
 
         vector = embed_query(question)
         top_k = 8 if complexity == "simple" else 10
+
         pinecone_results = pinecone_index.query(
             vector=vector,
             top_k=top_k,
             include_metadata=True,
-            filter={"module": module}
+            filter={
+                "module": module,
+                "field_name": {"$in": searchable_fields}
+            }
         )
 
         field_hints = [
