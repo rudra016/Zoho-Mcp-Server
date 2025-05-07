@@ -4,19 +4,17 @@ import requests
 from typing import Dict
 from utils.pinecone_client import pinecone_index
 from utils.genai_client import embed_query
-from utils.fields_fetcher import get_searchable_fields
+from utils.fields_fetcher import get_searchable_fields, get_field_metadata
 from utils.token_loader import load_token_from_client
 import requests
 
 mcp = FastMCP("zoho_crm")
 
- 
 @mcp.tool()
 def get_filter_descriptors(question: str, module: str = "Deals", complexity: str = "simple") -> Dict:
     """
-    This tool performs a Pinecone vector search based on the question and module,
-    and returns matching content, tool descriptors, and formatting instructions.
-    Ensures only searchable fields are retrieved from Pinecone.
+    Performs a Pinecone vector search on the given question using searchable fields,
+    and returns matched field hints. If a field is a picklist, includes its values.
     """
     try:
         print(f"Tool received question: {question}")
@@ -44,11 +42,32 @@ def get_filter_descriptors(question: str, module: str = "Deals", complexity: str
             }
         )
 
-        field_hints = [
-            f"{m['metadata']['content']}\n\nSimilarity Score: {m.get('score', 0):.4f}"
-            for m in pinecone_results['matches']
-            if 'content' in m['metadata']
-        ]
+        # Fetch full metadata to match picklists
+        field_metadata = get_field_metadata(module)
+        metadata_lookup = {field["field_label"]: field for field in field_metadata}
+
+        field_hints = []
+        for match in pinecone_results['matches']:
+            metadata = match.get("metadata", {})
+            field_label = metadata.get("field_name", "")
+            content = metadata.get("content", "")
+            score = match.get("score", 0.0)
+
+            picklist_values = []
+            if field_label in metadata_lookup:
+                field_info = metadata_lookup[field_label]
+                if field_info.get("data_type") == "picklist":
+                    picklist_values = [
+                        item.get("actual_value")
+                        for item in field_info.get("pick_list_values", [])
+                        if item.get("actual_value") is not None
+                    ]
+
+            result_text = f"{content}\n\nSimilarity Score: {score:.4f}"
+            if picklist_values:
+                result_text += f"\nPicklist Values: {picklist_values}"
+
+            field_hints.append(result_text)
 
         return {
             "pinecone_results": field_hints,
@@ -63,7 +82,7 @@ def get_filter_descriptors(question: str, module: str = "Deals", complexity: str
             "error": "Tool failed internally",
             "details": str(e)
         }
-
+    
 
 @mcp.tool()
 def fetch_zoho_results(url: str) -> dict:

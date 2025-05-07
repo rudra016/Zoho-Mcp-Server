@@ -28,11 +28,13 @@ Formula:
 
 Rules:
 - You can only use a maximum of 10 filters.
+- When data_type is "date" use YYYY-MM-DD format without time.
 - Choose filters that logically match the user’s intent.
 - Only use the allowed fields listed above.
 - You must include both key and value (with operator) for each filter.
 
 """
+
 
 FORMAT_INSTRUCTIONS = """
 For Example, return ONLY valid JSON in the following format:
@@ -50,6 +52,23 @@ For Example, return ONLY valid JSON in the following format:
       "value": {
         "operator": "equals",
         "value": "India"
+      }
+    },
+    {
+      "key": "Time_Contacted",
+      "value": {
+        "operator": "equals",
+        "value": "2025-05-02"
+      }
+    },
+    {
+      "key": "Created_Time",
+      "value": {
+        "operator": "between",
+        "value": [
+          "2024-02-01T18:52:56+00:00",
+          "2024-02-20T18:52:56+00:00"
+        ]
       }
     }
   ]
