@@ -58,7 +58,7 @@ For Example, return ONLY valid JSON in the following format:
       "key": "Time_Contacted",
       "value": {
         "operator": "equals",
-        "value": "2025-05-02"
+        "value": "YYYY-MM-DD"
       }
     },
     {
@@ -66,8 +66,8 @@ For Example, return ONLY valid JSON in the following format:
       "value": {
         "operator": "between",
         "value": [
-          "2024-02-01T18:52:56+00:00",
-          "2024-02-20T18:52:56+00:00"
+          "YYYY-MM-DDTHH:MM:SS+00:00",
+          "YYYY-MM-DDTHH:MM:SS+00:00"
         ]
       }
     }
